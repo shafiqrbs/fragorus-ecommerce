@@ -1,5 +1,5 @@
 // *********************
-// Role of the component: Product item component 
+// Role of the component: Product item component
 // Name of the component: ProductItem.tsx
 // Developer: Aleksandar Kuzmanovic
 // Version: 1.0
@@ -11,60 +11,48 @@
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
-import ProductItemRating from "./ProductItemRating";
+// import ProductItemRating from "./ProductItemRating";
 
-const ProductItem = ({
-  product,
-  color,
-}: {
-  product: Product;
-  color: string;
-}) => {
-  return (
-    <div className="flex flex-col items-center gap-y-2">
-      <Link href={`/product/${product.slug}`}>
-        <Image
-          src={
-            product.mainImage
-              ? `/${product.mainImage}`
-              : "/product_placeholder.jpg"
-          }
-          width="0"
-          height="0"
-          sizes="100vw"
-          className="w-auto h-[300px]"
-          alt={product?.title}
-        />
-      </Link>
-      <Link
-        href={`/product/${product.slug}`}
-        className={
-          color === "black"
-            ? `text-xl text-black font-normal mt-2 uppercase`
-            : `text-xl text-white font-normal mt-2 uppercase`
-        }
-      >
-        {product.title}
-      </Link>
-      <p
-        className={
-          color === "black"
-            ? "text-lg text-black font-semibold"
-            : "text-lg text-white font-semibold"
-        }
-      >
-        ${product.price}
-      </p>
+const ProductItem = ({ product, color }: { product: Product; color: string }) => {
+	return (
+		<div className="flex flex-col items-center">
+			<Link href={`/product/${product.slug}`}>
+				<Image
+					src={product.imagePath ? `/${product.imagePath}` : "/product_placeholder.jpg"}
+					width="0"
+					height="0"
+					sizes="100vw"
+					className="w-auto h-[300px] rounded-ss rounded-tr"
+					alt={product?.name}
+				/>
+			</Link>
+			<div className="min-h-[100px] h-full w-full flex flex-col justify-between border-slate-100 border">
+				<Link
+					href={`/product/${product.slug}`}
+					className={`w-full block text-xl  font-normal mt-2 uppercase text-center ${
+						color === "black" ? "text-black" : "text-white"
+					}`}
+				>
+					{product.name}
+				</Link>
+				<p
+					className={`text-lg font-semibold text-center ${
+						color === "black" ? "text-black" : "text-white"
+					}`}
+				>
+					{product.price}TK
+				</p>
 
-      <ProductItemRating productRating={product?.rating} />
-      <Link
-        href={`/product/${product?.slug}`}
-        className="block flex justify-center items-center w-full uppercase bg-white px-0 py-2 text-base border border-black border-gray-300 font-bold text-blue-600 shadow-sm hover:bg-black hover:bg-gray-100 focus:outline-none focus:ring-2"
-      >
-        <p>View product</p>
-      </Link>
-    </div>
-  );
+				{/* <ProductItemRating productRating={product?.rating} /> */}
+				<Link
+					href={`/product/${product?.slug}`}
+					className="flex justify-center items-center w-full uppercase bg-white px-0 py-2 text-base border border-black dark:border-gray-300 font-bold text-blue-600 shadow-sm hover:bg-black dark:hover:bg-gray-100 focus:outline-none focus:ring-2"
+				>
+					<p>View product</p>
+				</Link>
+			</div>
+		</div>
+	);
 };
 
 export default ProductItem;

@@ -1,102 +1,70 @@
-import NextAuth from "next-auth";
-import { Account, User as AuthUser } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
+import { setVendor } from "@/app/actions";
+import NextAuth, { JWT, Session, User } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
-import bcrypt from "bcryptjs";
-import prisma from "@/utils/db";
-import { nanoid } from "nanoid";
 
 export const authOptions: any = {
-  // Configure one or more authentication providers
-  providers: [
-    CredentialsProvider({
-      id: "credentials",
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "text" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials: any) {
+	providers: [
+		CredentialsProvider({
+			id: "credentials",
+			name: "Credentials",
+			credentials: {
+				license: { label: "License", type: "text" },
+				activeKey: { label: "Active Key", type: "password" },
+			},
+			async authorize(credentials: any) {
+				try {
+					const { license, activeKey } = credentials;
 
-        try {
-          const user = await prisma.user.findFirst({
-            where: {
-              email: credentials.email,
-            },
-          });
-          if (user) {
-            const isPasswordCorrect = await bcrypt.compare(
-              credentials.password,
-              user.password!
-            );
-            if (isPasswordCorrect) {
-              return user;
-            }
-          }
-        } catch (err: any) {
-          throw new Error(err);
-        }
-      },
-    })
-    // GithubProvider({
-    //   clientId: process.env.GITHUB_ID ?? "",
-    //   clientSecret: process.env.GITHUB_SECRET ?? "",
-    // }),
-    // GoogleProvider({
-    //   clientId: process.env.GOOGLE_ID ?? "",
-    //   clientSecret: process.env.GOOGLE_SECRET ?? "",
-    // }),
-    // ...add more providers here if you want. You can find them on nextauth website.
-  ],
-  callbacks: {
-    async signIn({ user, account }: { user: AuthUser; account: Account }) {
-      if (account?.provider == "credentials") {
-        return true;
-      }
-      // if (account?.provider == "github") {
+					if (!license || !activeKey) {
+						throw new Error("license or active key not found");
+					}
 
-      //   try {
-      //     const existingUser = await prisma.user.findFirst({ where: {email: user.email!} });
-      //     if (!existingUser) {
+					const userInfo = await setVendor(license, activeKey);
+					if (userInfo !== "Unauthorized access.") {
+						const data = {
+							name: userInfo.setup?.name,
+							mobile: userInfo.setup?.mobile,
+							email: userInfo.setup?.email,
+						};
+						return { ...data, license, activeKey };
+					}
 
-      //       await prisma.user.create({
-      //           data: {
-      //             id: nanoid() + "",
-      //             email: user.email!
-      //           },
-      //         });
-      //       return true;
-      //     }
-      //     return true;
-      //   } catch (err) {
-      //     console.log("Error saving user", err);
-      //     return false;
-      //   }
-      // }
+					throw new Error("Invalid license or active key");
+				} catch (err: any) {
+					throw new Error(err);
+				}
+			},
+		}),
+	],
+	callbacks: {
+		async jwt({ token, user }) {
+			if (user) {
+				token.license = user.license;
+				token.activeKey = user.activeKey;
 
-      // if (account?.provider == "google") {
+				token.user = {
+					name: user.setup?.name,
+					mobile: user.setup?.mobile,
+					email: user.setup?.email,
+				};
+			}
+			return token;
+		},
 
-      //   try {
-      //     const existingUser = await prisma.user.findFirst({where: { email: user.email! }});
-      //     if (!existingUser) {
-      //       await prisma.user.create({
-      //           data: {
-      //             id: nanoid() + "",
-      //             email: user.email!
-      //           },
-      //         });
+		async session({ session, token }) {
+			session.user = token.user;
+			session.license = token.license;
+			session.activeKey = token.activeKey;
 
-      //       return true;
-      //     }
-      //     return true;
-      //   } catch (err) {
-      //     console.log("Error saving user", err);
-      //     return false;
-      //   }
-      // }
-    },
-  },
+			return session;
+		},
+	},
+	theme: {
+		colorScheme: "auto", // "auto" | "dark" | "light"
+		brandColor: "#202e38", // Hex color code
+		logo: "https://cdn-icons-png.flaticon.com/512/12440/12440960.png", // Absolute URL to image
+		buttonText: "", // Hex color code
+	},
 };
 
 export const handler = NextAuth(authOptions);

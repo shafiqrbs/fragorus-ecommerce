@@ -1,77 +1,66 @@
-'use server'
+"use server";
 
-import { revalidateTag } from "next/cache";
+import { auth } from "@/utils/auth";
+import { fetcher } from "@/utils/fetcher";
 
-export async function deleteWishItem(id: string){
-  await fetch(`http://localhost:3001/api/wishlist/${id}`, {
-    method: "DELETE",
-  });
+interface SearchParams {
+	query?: string;
+	category?: string;
+	brand?: string;
 }
 
+export async function deleteWishItem(id: string) {
+	await fetch(`http://localhost:3001/api/wishlist/${id}`, {
+		method: "DELETE",
+	});
+}
 
-// import { redirect } from 'next/navigation'
+export async function setVendor(license: string, activeKey: string) {
+	const response = await fetcher("/splash", {
+		method: "POST",
+		body: JSON.stringify({
+			license,
+			activeKey,
+		}),
+	});
 
-// export async function sortCars(formData: string) {
-//   switch (formData) {
-//     case "defaultSort":
-//       redirect("/cars");
-//       break;
-//     case "newestSort":
-//       redirect("/cars?sort=newestCars");
-//       break;
-    
-//     case "oldestSort":
-//       redirect("/cars?sort=oldestCars");
-//       break;
+	return response;
+}
 
-//     case "lowestPriceSort":
-//       redirect("/cars?sort=lowestPrice");
-//       break;
+export async function searchProducts(params: SearchParams) {
+	const url = new URL("/product-search", process.env.BASE_URL);
 
-//     case "highPriceSort":
-//       redirect("/cars?sort=highestPrice");
-//       break;
-  
-//     default:
-//       redirect("/cars");
-//       break;
-//   }
-// }
+	Object.entries(params).forEach(([key, value]) => {
+		if (value) url.searchParams.append(key, value);
+	});
 
-// export async function filterCars(formData: FormData){
-//   redirect(`/cars?condition=${formData.get("conditions") || "all"}&transmission=${formData.get("transmissions") || 'all'}&fuel=${formData.get("fuels") || 'all'}`);
-// }
+	const data = await fetcher(url.toString());
 
+	return data;
+}
 
-// export async function filterAndSortCars(formData: FormData){
-//   const sort = formData.get("sort");
-//   let sortQuery = "";
-//   switch(sort){
-//     case "defaultSort":
-//       sortQuery ="";
-//       break;
-//     case "newestSort":
-//       sortQuery = "&sort=newestCars";
-//       break;
-    
-//     case "oldestSort":
-//       sortQuery = "&sort=oldestCars";
-//       break;
+export async function getAllProducts() {
+	const data = await fetcher("/product");
+	console.log(data);
+	return data;
+}
 
-//     case "lowestPriceSort":
-//       sortQuery = "&sort=lowestPrice";
-//       break;
+export async function getProductDetails(id: string) {
+	const data = await fetcher(`/product/${id}`);
 
-//     case "highPriceSort":
-//       sortQuery = "&sort=highestPrice";
-//       break;
-  
-//     default:
-//       sortQuery = "";
-//       break;
-//   }
-//   redirect(`/products?filter=no${sortQuery}`);
+	return data;
+}
 
-  // za kasnije kada dodjem do filtera
-//   redirect(`/products?condition=${formData.get("conditions") || "all"}&transmission=${formData.get("transmissions") || 'all'}&fuel=${formData.get("fuels") || 'all'}${sortQuery}`);
-// }
+export async function getAllCategories() {
+	const { license, activeKey } = await auth();
+	const vendorData = await setVendor(license, activeKey);
+	const categories = vendorData?.categories;
+	return categories;
+}
+
+export async function getAllBrands() {
+	const { license, activeKey } = await auth();
+	const vendorData = await setVendor(license, activeKey);
+	const brands = vendorData?.brands;
+	return brands;
+}
