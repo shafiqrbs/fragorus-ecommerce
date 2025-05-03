@@ -2,6 +2,7 @@
 
 import { auth } from "@/utils/auth";
 import { fetcher } from "@/utils/fetcher";
+import { Session } from "next-auth";
 
 interface SearchParams {
 	query?: string;
@@ -41,7 +42,6 @@ export async function searchProducts(params: SearchParams) {
 
 export async function getAllProducts() {
 	const data = await fetcher("/product");
-	console.log(data);
 	return data;
 }
 
@@ -52,14 +52,16 @@ export async function getProductDetails(id: string) {
 }
 
 export async function getAllCategories() {
-	const { license, activeKey } = await auth();
+	const { license, activeKey } = (await auth()) as Session;
+	if (!license || !activeKey) return [];
 	const vendorData = await setVendor(license, activeKey);
 	const categories = vendorData?.categories;
 	return categories;
 }
 
 export async function getAllBrands() {
-	const { license, activeKey } = await auth();
+	const { license, activeKey } = (await auth()) as Session;
+	if (!license || !activeKey) return [];
 	const vendorData = await setVendor(license, activeKey);
 	const brands = vendorData?.brands;
 	return brands;

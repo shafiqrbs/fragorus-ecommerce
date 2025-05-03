@@ -6,7 +6,7 @@ import SessionProvider from "@/utils/SessionProvider";
 import Providers from "@/Providers";
 import { getServerSession } from "next-auth";
 import "svgmap/dist/svgMap.min.css";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 const inter = Inter({ subsets: ["latin"] });
 

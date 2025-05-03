@@ -1,6 +1,7 @@
 interface Product {
 	productId: number;
 	itemId: number;
+	item_id: string;
 	name: string;
 	nameBn: string;
 	slug: string;
@@ -36,11 +37,15 @@ interface Product {
 	quantityApplicable: number;
 	maxQuantity: number;
 	imagePath: string;
+	gallery: Array<{
+		imageId: number;
+		imagePath: string;
+	}>;
 }
 
 interface SingleProductPageProps {
 	params: {
-		productSlug: string;
+		id: number;
 	};
 }
 

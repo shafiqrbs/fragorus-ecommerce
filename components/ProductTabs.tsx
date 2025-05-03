@@ -42,7 +42,9 @@ const ProductTabs = ({ product }: { product: Product }) => {
 			</div>
 			<div className="pt-5">
 				{currentProductTab === 0 && (
-					<p className="text-lg max-sm:text-sm">{product?.description}</p>
+					<p className="text-lg max-sm:text-sm">
+						{product?.shortDescription || "No description available for this product."}
+					</p>
 				)}
 
 				{currentProductTab === 1 && (
@@ -52,21 +54,21 @@ const ProductTabs = ({ product }: { product: Product }) => {
 								{/* row 1 */}
 								<tr>
 									<th>Manufacturer:</th>
-									<td>{product?.manufacturer}</td>
+									<td>{product?.brand}</td>
 								</tr>
 								{/* row 2 */}
 								<tr>
 									<th>Category:</th>
 									<td>
-										{product?.category?.name
-											? formatCategoryName(product?.category?.name)
+										{product?.category
+											? formatCategoryName(product?.category)
 											: "No category"}
 									</td>
 								</tr>
 								{/* row 3 */}
 								<tr>
-									<th>Color:</th>
-									<td>Silver, LightSlateGray, Blue</td>
+									<th>Colors:</th>
+									<td>{product?.colors ? product?.colors : "Base color"}</td>
 								</tr>
 							</tbody>
 						</table>

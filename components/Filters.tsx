@@ -1,157 +1,150 @@
-// *********************
-// Role of the component: Filters on shop page
-// Name of the component: Filters.tsx
-// Developer: Aleksandar Kuzmanovic
-// Version: 1.0
-// Component call: <Filters />
-// Input parameters: no input parameters
-// Output: stock, rating and price filter
-// *********************
-
 "use client";
 import React, { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useSortStore } from "@/app/_zustand/sortStore";
 import { usePaginationStore } from "@/app/_zustand/paginationStore";
+import { fetcher } from "@/utils/fetcher";
 
-interface InputCategory {
-  inStock: { text: string, isChecked: boolean },
-  outOfStock: { text: string, isChecked: boolean },
-  priceFilter: { text: string, value: number },
-  ratingFilter: { text: string, value: number },
-}
+type Product = { brandId: number; brand: string; categoryId: number; category: string };
 
-const Filters = () => {
-  const pathname = usePathname();
-  const { replace } = useRouter();
+type FiltersState = {
+	inStock: boolean;
+	outOfStock: boolean;
+	price: number;
+	rating: number;
+	brandId: string;
+	categoryId: string;
+};
 
-  // getting current page number from Zustand store
-  const { page } = usePaginationStore();
+const Filters = ({
+	allBrands,
+	allCategories,
+}: {
+	allBrands: Brand[];
+	allCategories: Category[];
+}) => {
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const { replace } = useRouter();
+	const { page } = usePaginationStore();
+	const { sortBy } = useSortStore();
 
-  const [inputCategory, setInputCategory] = useState<InputCategory>({
-    inStock: { text: "instock", isChecked: true },
-    outOfStock: { text: "outofstock", isChecked: true },
-    priceFilter: { text: "price", value: 3000 },
-    ratingFilter: { text: "rating", value: 0 },
-  });
-  const { sortBy } = useSortStore();
+	const [filters, setFilters] = useState<FiltersState>({
+		inStock: true,
+		outOfStock: true,
+		price: 3000,
+		rating: 0,
+		brandId: "", // '' means ignore
+		categoryId: "",
+	});
 
-  useEffect(() => {
-    const params = new URLSearchParams();
-    // setting URL params and after that putting them all in URL
-    params.set("outOfStock", inputCategory.outOfStock.isChecked.toString());
-    params.set("inStock", inputCategory.inStock.isChecked.toString());
-    params.set("rating", inputCategory.ratingFilter.value.toString());
-    params.set("price", inputCategory.priceFilter.value.toString());
-    params.set("sort", sortBy);
-    params.set("page", page.toString());
-    replace(`${pathname}?${params}`);
-  }, [inputCategory, sortBy, page]);
+	// derive initial from URL
+	useEffect(() => {
+		const p = searchParams;
+		setFilters({
+			inStock: p.get("inStock") === "true",
+			outOfStock: p.get("outOfStock") === "true",
+			price: Number(p.get("price") || 3000),
+			rating: Number(p.get("rating") || 0),
+			brandId: p.get("brandId") || "",
+			categoryId: p.get("categoryId") || "",
+		});
+	}, [searchParams]);
 
-  return (
-    <div>
-      <h3 className="text-2xl mb-2">Filters</h3>
-      <div className="divider"></div>
-      <div className="flex flex-col gap-y-1">
-        <h3 className="text-xl mb-2">Availability</h3>
-        <div className="form-control">
-          <label className="cursor-pointer flex items-center">
-            <input
-              type="checkbox"
-              checked={inputCategory.inStock.isChecked}
-              onChange={() =>
-                setInputCategory({
-                  ...inputCategory,
-                  inStock: {
-                    text: "instock",
-                    isChecked: !inputCategory.inStock.isChecked,
-                  },
-                })
-              }
-              className="checkbox"
-            />
-            <span className="label-text text-lg ml-2 text-black">In stock</span>
-          </label>
-        </div>
+	// fetch product list for brand/category options
+	useEffect(() => {
+		(async () => {
+			const all: Product[] = await fetcher("/product-search");
+			const uniqueBrands = Array.from(
+				new Map(all.map((p) => [p.brandId, p.brand])).entries()
+			).map(([id, name]) => ({ id, name }));
+			const uniqueCats = Array.from(
+				new Map(all.map((p) => [p.categoryId, p.category])).entries()
+			).map(([id, name]) => ({ id, name }));
+		})();
+	}, []);
 
-        <div className="form-control">
-          <label className="cursor-pointer flex items-center">
-            <input
-              type="checkbox"
-              checked={inputCategory.outOfStock.isChecked}
-              onChange={() =>
-                setInputCategory({
-                  ...inputCategory,
-                  outOfStock: {
-                    text: "outofstock",
-                    isChecked: !inputCategory.outOfStock.isChecked,
-                  },
-                })
-              }
-              className="checkbox"
-            />
-            <span className="label-text text-lg ml-2 text-black">
-              Out of stock
-            </span>
-          </label>
-        </div>
-      </div>
+	// update URL params
+	useEffect(() => {
+		const params = new URLSearchParams();
+		params.set("inStock", filters.inStock.toString());
+		params.set("outOfStock", filters.outOfStock.toString());
+		params.set("price", filters.price.toString());
+		if (filters.brandId) params.set("brandId", filters.brandId);
+		if (filters.categoryId) params.set("categoryId", filters.categoryId);
+		params.set("sort", sortBy);
+		params.set("page", page.toString());
+		replace(`${pathname}?${params}`);
+	}, [filters, sortBy, page, pathname, replace]);
 
-      <div className="divider"></div>
-      <div className="flex flex-col gap-y-1">
-        <h3 className="text-xl mb-2">Price</h3>
-        <div>
-          <input
-            type="range"
-            min={0}
-            max={3000}
-            step={10}
-            value={inputCategory.priceFilter.value}
-            className="range"
-            onChange={(e) =>
-              setInputCategory({
-                ...inputCategory,
-                priceFilter: {
-                  text: "price",
-                  value: Number(e.target.value),
-                },
-              })
-            }
-          />
-          <span>{`Max price: $${inputCategory.priceFilter.value}`}</span>
-        </div>
-      </div>
+	return (
+		<div>
+			<h3 className="text-2xl mb-2">Filters</h3>
+			<div className="divider" />
+			{/* Category */}
+			<h4 className="text-xl mb-2">Category</h4>
+			<select
+				value={filters.categoryId}
+				onChange={(e) => setFilters((f) => ({ ...f, categoryId: e.target.value }))}
+				className="select w-full"
+			>
+				<option value="">All Categories</option>
+				{allCategories.map((c) => (
+					<option key={c.category_id} value={c.category_id.toString()}>
+						{c.name}
+					</option>
+				))}
+			</select>
 
-      <div className="divider"></div>
+			<div className="divider" />
+			{/* Brand */}
+			<h4 className="text-xl mb-2">Brand</h4>
+			<select
+				value={filters.brandId}
+				onChange={(e) => setFilters((f) => ({ ...f, brandId: e.target.value }))}
+				className="select w-full"
+			>
+				<option value="">All Brands</option>
+				{allBrands.map((b) => (
+					<option key={b.brand_id} value={b.brand_id.toString()}>
+						{b.name}
+					</option>
+				))}
+			</select>
 
-      <div>
-        <h3 className="text-xl mb-2">Minimum Rating:</h3>
-        <input
-          type="range"
-          min={0}
-          max="5"
-          value={inputCategory.ratingFilter.value}
-          onChange={(e) =>
-            setInputCategory({
-              ...inputCategory,
-              ratingFilter: { text: "rating", value: Number(e.target.value) },
-            })
-          }
-          className="range range-info"
-          step="1"
-        />
-        <div className="w-full flex justify-between text-xs px-2">
-          <span>0</span>
-          <span>1</span>
-          <span>2</span>
-          <span>3</span>
-          <span>4</span>
-          <span>5</span>
-        </div>
-      </div>
-    </div>
-  );
+			<div className="divider" />
+			{/* Availability */}
+			<h4 className="text-xl mb-2">Availability</h4>
+			{["inStock", "outOfStock"].map((key) => (
+				<div className="form-control" key={key}>
+					<label className="cursor-pointer flex items-center">
+						<input
+							type="checkbox"
+							checked={(filters as any)[key]}
+							onChange={() => setFilters((f) => ({ ...f, [key]: !(f as any)[key] }))}
+							className="checkbox"
+						/>
+						<span className="label-text text-lg ml-2 text-black">
+							{key === "inStock" ? "In stock" : "Out of stock"}
+						</span>
+					</label>
+				</div>
+			))}
+			<div className="divider" />
+			{/* Price */}
+			<h4 className="text-xl mb-2">Price (max)</h4>
+			<input
+				type="range"
+				min={0}
+				max={100000}
+				step={10}
+				value={filters.price}
+				onChange={(e) => setFilters((f) => ({ ...f, price: Number(e.target.value) }))}
+				className="range"
+			/>
+			<span>{`৳${filters.price}`}</span>
+		</div>
+	);
 };
 
 export default Filters;
