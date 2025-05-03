@@ -18,7 +18,9 @@ const AddToCartSingleProductBtn = ({ product, quantityCount }: SingleProductBtnP
 
 	const handleAddToCart = () => {
 		addToCart({
-			id: product?.productId.toString(),
+			id: product?.productId
+				? product?.productId.toString()
+				: product?.product_id?.toString() || "",
 			title: product?.name,
 			price: product?.price,
 			image: product?.imagePath,

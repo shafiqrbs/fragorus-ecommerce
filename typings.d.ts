@@ -1,5 +1,6 @@
 interface Product {
 	productId: number;
+	product_id?: number;
 	itemId: number;
 	item_id: string;
 	name: string;

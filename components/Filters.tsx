@@ -44,7 +44,7 @@ const Filters = ({
 		setFilters({
 			inStock: p.get("inStock") === "true",
 			outOfStock: p.get("outOfStock") === "true",
-			price: Number(p.get("price") || 3000),
+			price: Number(p.get("price") || 50000),
 			rating: Number(p.get("rating") || 0),
 			brandId: p.get("brandId") || "",
 			categoryId: p.get("categoryId") || "",
