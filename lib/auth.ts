@@ -11,9 +11,10 @@ export const authOptions: NextAuthOptions = {
 				license: { label: "License", type: "text" },
 				activeKey: { label: "Active Key", type: "password" },
 			},
-			async authorize(credentials: any) {
+			// @ts-expect-error: credentials type is not defined
+			async authorize(credentials: { license: string; activeKey: string } | undefined) {
 				try {
-					const { license, activeKey } = credentials;
+					const { license, activeKey } = credentials || {};
 
 					if (!license || !activeKey) {
 						throw new Error("license or active key not found");
@@ -42,18 +43,19 @@ export const authOptions: NextAuthOptions = {
 				token.license = user.license;
 				token.activeKey = user.activeKey;
 				token.user = {
-					name: user.name,
-					mobile: user.mobile,
-					email: user.email,
+					name: user.name as string,
+					// @ts-expect-error: mobile is not defined on the user object
+					mobile: user.mobile as string,
+					email: user.email as string,
 				};
 			}
 			return token;
 		},
 
 		async session({ session, token }) {
-			session.user = token.user;
-			session.license = token.license;
-			session.activeKey = token.activeKey;
+			session.user = token.user as { name?: string | null; email?: string | null };
+			session.license = token.license as string;
+			session.activeKey = token.activeKey as string;
 			return session;
 		},
 	},
