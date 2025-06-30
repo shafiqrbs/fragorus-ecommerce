@@ -26,7 +26,7 @@ const CategoryMenu = async () => {
 			<Heading title="BROWSE CATEGORIES" />
 			<div className="max-w-screen-2xl mx-auto py-10 gap-x-5 px-16 max-md:px-10 gap-y-5 grid grid-cols-5 max-lg:grid-cols-3 max-md:grid-cols-2 max-[450px]:grid-cols-1">
 				{baseData.map((item: Category) => (
-					<CategoryItem title={item.name} key={item.id} href={`/category/${item.id}`}>
+					<CategoryItem title={item.name} key={item.id} href={`/shop?categoryId=${item.id}`}>
 						<Image
 							src={item.imagePath || DEFAULT_FALLBACK_IMAGE}
 							width={48}

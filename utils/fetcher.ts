@@ -19,19 +19,30 @@ export async function fetcher(endpoint: string, options = {}) {
 		...options.headers,
 	};
 
-	const config = {
+	// =============== add a 30-second timeout to the fetch request ================
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), 30000); // 30 seconds
+
+	const config: RequestInit = {
 		method: "GET",
 		...options,
 		headers,
+		signal: controller.signal,
 	};
 
 	try {
 		const response = await fetch(`${BASE_URL}${endpoint}`, config);
+		clearTimeout(timeout);
 		if (!response.ok) {
 			throw new Error(`HTTP error! Status: ${response.status}`);
 		}
 		return await response.json();
 	} catch (error) {
+		// =============== handle fetch abort error ================
+		if ((error as Error)?.name === 'AbortError') {
+			console.error('Fetch request timed out');
+			throw new Error('Fetch request timed out');
+		}
 		console.error(`Fetch error: ${(error as Error)?.message}`);
 		throw error;
 	}

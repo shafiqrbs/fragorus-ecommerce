@@ -135,7 +135,7 @@ const CheckoutPage = () => {
 						orderNotice: "",
 					});
 					clearCart();
-					toast.success("Order created successfuly");
+					toast.success("Order created successfully");
 					setTimeout(() => {
 						router.push("/");
 					}, 1000);
