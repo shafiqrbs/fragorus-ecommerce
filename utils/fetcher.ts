@@ -13,10 +13,10 @@ export async function fetcher(endpoint: string, options = {}) {
 
 	const headers = {
 		"Content-Type": "application/json",
-		"X-API-KEY": API_KEY,
-		"X-API-VALUE": API_VALUE,
+		"X-API-KEY": API_KEY || "",
+		"X-API-VALUE": API_VALUE || "",
 		"X-API-SECRET": session?.activeKey || "",
-		...options.headers,
+		...(options as RequestInit).headers,
 	};
 
 	// =============== add a 30-second timeout to the fetch request ================
