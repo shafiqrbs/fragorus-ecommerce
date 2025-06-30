@@ -44,6 +44,5 @@ export async function fetcher(endpoint: string, options = {}) {
 			throw new Error('Fetch request timed out');
 		}
 		console.error(`Fetch error: ${(error as Error)?.message}`);
-		throw error;
 	}
 }

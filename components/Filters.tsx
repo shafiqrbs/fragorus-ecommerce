@@ -89,7 +89,7 @@ const Filters = ({
 				className="select w-full"
 			>
 				<option value="">All Categories</option>
-				{allCategories.map((c) => (
+				{allCategories?.map((c) => (
 					<option key={c.category_id} value={c.category_id.toString()}>
 						{c.name}
 					</option>
@@ -105,7 +105,7 @@ const Filters = ({
 				className="select w-full"
 			>
 				<option value="">All Brands</option>
-				{allBrands.map((b) => (
+				{allBrands?.map((b) => (
 					<option key={b.brand_id} value={b.brand_id.toString()}>
 						{b.name}
 					</option>
